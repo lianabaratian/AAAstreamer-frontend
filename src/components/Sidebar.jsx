@@ -3,7 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar({ activePage, onNavigate }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(() => localStorage.getItem('sidebar_expanded') === 'true')
+
+  const toggleExpanded = (val) => {
+    setExpanded(val)
+    localStorage.setItem('sidebar_expanded', String(val))
+  }
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -21,13 +26,8 @@ export default function Sidebar({ activePage, onNavigate }) {
     document.documentElement.style.setProperty('--sidebar-w', expanded ? '224px' : '64px')
   }, [expanded])
 
-  // Set initial value on mount
-  useEffect(() => {
-    document.documentElement.style.setProperty('--sidebar-w', '64px')
-  }, [])
-
-  const go = (path, page) => {
-    navigate(path)
+  const go = (path, page, state) => {
+    navigate(path, state ? { state } : undefined)
     onNavigate?.(page)
   }
 
@@ -62,11 +62,11 @@ export default function Sidebar({ activePage, onNavigate }) {
   )
 
   /* ── Icons for collapsed pills ── */
-  const iconBtn = (page, path, svgPath) => {
+  const iconBtn = (page, path, svgPath, state) => {
     const active = isActive(page)
     return (
       <button
-        onClick={() => go(path, page)}
+        onClick={() => go(path, page, state)}
         className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-colors ${
           active ? 'bg-purple-600 text-white' : 'text-gray-400 hover:bg-purple-600/30 hover:text-purple-300'
         }`}
@@ -93,7 +93,7 @@ export default function Sidebar({ activePage, onNavigate }) {
         <div className="flex flex-col items-center py-5 w-16 h-full">
           {/* Hamburger */}
           <button
-            onClick={() => setExpanded(true)}
+            onClick={() => toggleExpanded(true)}
             className="text-white mb-auto mt-1 hover:opacity-70 transition-opacity"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -122,7 +122,8 @@ export default function Sidebar({ activePage, onNavigate }) {
                 <circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none" />
                 <circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none" />
                 <circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none" />
-              </svg>
+              </svg>,
+              { tab: 'watchlist' }
             )}
           </div>
 
@@ -173,7 +174,7 @@ export default function Sidebar({ activePage, onNavigate }) {
           {/* Close button — top, standalone */}
           <div className="flex items-center px-4 pt-5 pb-3 flex-shrink-0">
             <button
-              onClick={() => setExpanded(false)}
+              onClick={() => toggleExpanded(false)}
               className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
               style={{ color: 'var(--text-muted)' }}
             >
@@ -212,11 +213,18 @@ export default function Sidebar({ activePage, onNavigate }) {
             <div className="my-3 mx-1" style={{ height: '1px', background: 'var(--border-subtle)' }} />
             <p className="px-3 pb-1 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Lists</p>
 
-            <NavItem icon={
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-              </svg>
-            } label="Watchlist" page="watchlist" path="/watchlist" />
+            <button
+              onClick={() => { navigate('/watchlist', { state: { tab: 'watchlist' } }); onNavigate?.('watchlist') }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('watchlist') ? 'bg-purple-600' : 'hover:bg-purple-600/20'}`}
+              style={{ color: isActive('watchlist') ? '#fff' : 'var(--text-primary)' }}
+            >
+              <span className="flex-shrink-0 w-5 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              </span>
+              <span className="truncate font-bold">Watchlist</span>
+            </button>
 
             <button
               onClick={() => { navigate('/watchlist', { state: { tab: 'watched' } }); onNavigate?.('watchlist') }}

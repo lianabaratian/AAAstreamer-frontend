@@ -116,11 +116,11 @@ function BrowseCard({ movie }) {
 }
 
 const CATEGORY_META = {
-  'recommended':        { title: 'Recommended for You', fetch: () => getRecommendedMovies(60) },
-  'top-rated':          { title: 'Top Rated',           fetch: () => getTopRatedMovies(60) },
-  'trending':           { title: 'Trending',            fetch: () => getTrendingMovies(60) },
-  'new-arrivals':       { title: 'New Arrivals',        fetch: () => getNewMovies(60) },
-  'because-you-enjoyed':{ title: 'Because You Enjoyed', fetch: () => getBecauseYouEnjoyed(60).then(d => d.movies ?? []) },
+  'recommended':        { title: 'Recommended for You', fetch: () => getRecommendedMovies(40) },
+  'top-rated':          { title: 'Top Rated',           fetch: () => getTopRatedMovies(20) },
+  'trending':           { title: 'Trending',            fetch: () => getTrendingMovies(20) },
+  'new-arrivals':       { title: 'New Arrivals',        fetch: () => getNewMovies(40) },
+  'because-you-enjoyed':{ title: 'Because You Enjoyed', fetch: () => getBecauseYouEnjoyed(20).then(d => d.movies ?? []) },
 }
 
 export default function BrowsePage() {

@@ -4,7 +4,7 @@ export const getRecommendedMovies = (limit = 20) =>
   api.get('/me/recommendations/movies', { params: { limit } }).then(r => r.data)
 
 export const getTopRatedMovies = async (wantCount = 20) => {
-  const rated = await api.get('/stats/movies/top-rated', { params: { limit: wantCount * 3, min_ratings: 50 } }).then(r => r.data)
+  const rated = await api.get('/stats/movies/top-rated', { params: { limit: wantCount * 2, min_ratings: 10 } }).then(r => r.data)
   const results = await Promise.allSettled(
     rated.map(m => api.get(`/movies/${m.id}`).then(r => r.data))
   )
@@ -17,7 +17,7 @@ export const getTopRatedMovies = async (wantCount = 20) => {
 }
 
 export const getTrendingMovies = async (wantCount = 20) => {
-  const trending = await api.get('/stats/movies/most-rated', { params: { limit: wantCount * 3 } }).then(r => r.data)
+  const trending = await api.get('/stats/movies/most-rated', { params: { limit: wantCount * 2 } }).then(r => r.data)
   const results = await Promise.allSettled(
     trending.map(m => api.get(`/movies/${m.id}`).then(r => r.data))
   )
