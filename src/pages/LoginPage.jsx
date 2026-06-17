@@ -24,8 +24,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg-page)' }}>
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative" style={{ background: 'var(--bg-page)' }}>
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img src="/back.svg" alt="" className="w-full h-full object-cover" style={{ opacity: 0.2 }} />
+      </div>
+      <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-white tracking-tight">

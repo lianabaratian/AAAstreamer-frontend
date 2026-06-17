@@ -85,13 +85,17 @@ export default function HomePage() {
   }, [fetchPersonalised])
 
   return (
-    <div className="min-h-screen text-white flex" style={{ background: 'var(--bg-home)' }}>
+    <div className="min-h-screen text-white flex relative" style={{ background: 'var(--bg-home)' }}>
+      {/* Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img src="/back.svg" alt="" className="w-full h-full object-cover" style={{ opacity: 0.2 }} />
+      </div>
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
 
-      <main className="flex-1 sidebar-main px-8 overflow-hidden">
+      <main className="relative z-10 flex-1 sidebar-main px-4 md:px-8 overflow-hidden">
 
         {/* Top bar with centered logo */}
-        <div className="relative flex items-center justify-center py-5 mb-6">
+        <div className="relative flex items-center justify-center py-4 md:py-5 mb-4 md:mb-6">
           {user && (
             <div className="absolute left-0 flex flex-col">
               <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Welcome back,</span>

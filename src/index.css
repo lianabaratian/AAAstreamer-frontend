@@ -79,3 +79,10 @@ body {
   margin-left: var(--sidebar-w, 64px);
   transition: margin-left 0.25s ease;
 }
+
+@media (max-width: 767px) {
+  .sidebar-main {
+    margin-left: 0 !important;
+    padding-top: 60px; /* space for mobile top bar */
+  }
+}

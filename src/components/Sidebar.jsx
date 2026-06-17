@@ -16,7 +16,8 @@ export default function Sidebar({ activePage, onNavigate }) {
   const currentPage = activePage ?? (
     location.pathname === '/' ? 'home' :
     location.pathname === '/search' ? 'search' :
-    location.pathname === '/watchlist' ? 'watchlist' :
+    location.pathname === '/watchlist'
+      ? (location.state?.tab === 'watched' ? 'watched' : 'watchlist') :
     location.pathname === '/history' ? 'history' :
     location.pathname === '/settings' ? 'settings' :
     location.pathname === '/browse' ? 'browse' : ''
@@ -77,8 +78,41 @@ export default function Sidebar({ activePage, onNavigate }) {
   }
 
   return (
+    <>
+    {/* Mobile top bar */}
+    <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14"
+      style={{ background: 'var(--bg-nav)', borderBottom: '1px solid var(--border-subtle)', backdropFilter: 'blur(12px)' }}>
+      <button onClick={() => toggleExpanded(!expanded)} className="w-9 h-9 flex items-center justify-center rounded-xl"
+        style={{ color: 'var(--text-primary)' }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+          <line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" />
+        </svg>
+      </button>
+      <div className="flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="2.18" />
+          <line x1="7" y1="2" x2="7" y2="22" /><line x1="17" y1="2" x2="17" y2="22" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+        </svg>
+        <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>AAA<span style={{ color: '#9333ea' }}>Streamer</span></span>
+      </div>
+      <button onClick={() => go('/settings', 'settings')}
+        className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 border-2"
+        style={{ borderColor: isActive('settings') ? '#9333ea' : 'rgba(107,114,128,0.5)' }}>
+        {user ? <span className="text-white font-semibold text-xs">{user.username[0].toUpperCase()}</span>
+          : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+            </svg>}
+      </button>
+    </div>
+
+    {/* Mobile overlay backdrop */}
+    {expanded && (
+      <div className="md:hidden fixed inset-0 bg-black/50 z-[60]" onClick={() => toggleExpanded(false)} />
+    )}
+
     <aside
-      className="fixed left-0 top-0 h-full z-50 flex flex-col overflow-hidden"
+      className="hidden md:flex fixed left-0 top-0 h-full z-[70] flex-col overflow-hidden"
       style={{
         width: expanded ? '224px' : '64px',
         transition: 'width 0.25s ease',
@@ -87,6 +121,7 @@ export default function Sidebar({ activePage, onNavigate }) {
         borderRight: '1px solid var(--border-subtle)',
       }}
     >
+      <div className="md:hidden" style={{ display: expanded ? 'block' : 'none' }} />
 
       {/* ── COLLAPSED STATE ── */}
       {!expanded && (
@@ -116,7 +151,7 @@ export default function Sidebar({ activePage, onNavigate }) {
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             )}
-            {iconBtn('watchlist', '/watchlist',
+            {iconBtn(isActive('watched') ? 'watched' : 'watchlist', '/watchlist',
               <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" />
                 <circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none" />
@@ -227,9 +262,9 @@ export default function Sidebar({ activePage, onNavigate }) {
             </button>
 
             <button
-              onClick={() => { navigate('/watchlist', { state: { tab: 'watched' } }); onNavigate?.('watchlist') }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-purple-600/20"
-              style={{ color: 'var(--text-primary)' }}
+              onClick={() => { navigate('/watchlist', { state: { tab: 'watched' } }); onNavigate?.('watched') }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('watched') ? 'bg-purple-600' : 'hover:bg-purple-600/20'}`}
+              style={{ color: isActive('watched') ? '#fff' : 'var(--text-primary)' }}
             >
               <span className="flex-shrink-0 w-5 flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -280,5 +315,6 @@ export default function Sidebar({ activePage, onNavigate }) {
         </div>
       )}
     </aside>
+    </>
   )
 }

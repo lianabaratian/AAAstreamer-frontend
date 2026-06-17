@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { WatchlistProvider } from './context/WatchlistContext'
 import { useTheme } from './context/ThemeContext'
+import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function ThemeToggle() {
@@ -31,6 +32,7 @@ function ThemeToggle() {
   )
 }
 import HomePage from './pages/HomePage'
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import MovieDetailPage from './pages/MovieDetailPage'
@@ -42,6 +44,16 @@ import HistoryPage from './pages/HistoryPage'
 import BrowsePage from './pages/BrowsePage'
 import SettingsPage from './pages/SettingsPage'
 
+function RootRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-page)' }}>
+      <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+  return user ? <HomePage /> : <LandingPage />
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -52,7 +64,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
           <Route path="/movie/:id" element={<ProtectedRoute><MovieDetailPage /></ProtectedRoute>} />
           <Route path="/person/:id" element={<ProtectedRoute><PersonPage /></ProtectedRoute>} />

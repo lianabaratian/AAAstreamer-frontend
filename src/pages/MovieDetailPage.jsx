@@ -135,7 +135,7 @@ export default function MovieDetailPage() {
 
       <Sidebar activePage="home" onNavigate={(p) => p === 'home' && navigate('/')} />
 
-      <main className="flex-1 sidebar-main px-10 py-10 max-w-6xl relative" style={{ zIndex: 1 }}>
+      <main className="flex-1 sidebar-main px-4 md:px-10 py-6 md:py-10 max-w-6xl relative" style={{ zIndex: 1 }}>
 
         {/* Back */}
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 hover:text-white mb-8 transition-colors text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -144,13 +144,13 @@ export default function MovieDetailPage() {
         </button>
 
         {/* Poster + Info */}
-        <div className="flex gap-10 mb-14">
-          <div className="flex-shrink-0">
-            <img src={movie.poster_url} alt={movie.movie_title} className="w-72 rounded-2xl object-cover shadow-2xl" style={{ maxHeight: '430px' }} />
+        <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-10 md:mb-14">
+          <div className="flex-shrink-0 flex justify-center md:block">
+            <img src={movie.poster_url} alt={movie.movie_title} className="w-48 md:w-72 rounded-2xl object-cover shadow-2xl" style={{ maxHeight: '430px' }} />
           </div>
 
           <div className="flex flex-col justify-start pt-2 flex-1">
-            <h1 className="text-5xl font-bold mb-3 leading-tight" style={{ color: 'var(--text-primary)' }}>{movie.movie_title}</h1>
+            <h1 className="text-3xl md:text-5xl font-bold mb-3 leading-tight" style={{ color: 'var(--text-primary)' }}>{movie.movie_title}</h1>
 
             {directors.length > 0 && (
               <p className="mb-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -193,8 +193,13 @@ export default function MovieDetailPage() {
             </div>
 
             {stats && (
-              <div className="mb-6">
+              <div className="mb-6 flex items-center gap-3 flex-wrap">
                 <StarRating rating={stats.average_rating} count={stats.review_count} />
+                {sentimentInfo(stats.average_sentiment) && (
+                  <span className={`text-sm font-semibold ${sentimentInfo(stats.average_sentiment).color}`}>
+                    {sentimentInfo(stats.average_sentiment).label}
+                  </span>
+                )}
               </div>
             )}
 
@@ -505,7 +510,12 @@ function ReviewCard({ review, forceExpanded }) {
   const hasTitle = review.review_title?.trim().length > 0
   const hasBody = review.review_body?.trim().length > 0
   const isLong = (review.review_body?.length ?? 0) > 200
-  const si = sentimentInfo(review.sentiment)
+  // Public reviews don't carry sentiment; derive it from rating (out of 10)
+  const si = review.sentiment != null
+    ? sentimentInfo(review.sentiment)
+    : review.rating != null
+      ? sentimentInfo(review.rating)
+      : null
 
   return (
     <div className="rounded-2xl px-5 py-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
@@ -523,10 +533,7 @@ function ReviewCard({ review, forceExpanded }) {
           <div className="flex items-center gap-2 flex-wrap">
             {review.rating != null && <StarRating rating={review.rating} />}
             {si && (
-              <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full border ${si.color} ${si.bg} ${si.border}`}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: si.dot }} />
-                {si.label}
-              </span>
+              <span className={`text-xs font-semibold ${si.color}`}>{si.label}</span>
             )}
           </div>
 

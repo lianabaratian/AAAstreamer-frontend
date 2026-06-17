@@ -157,7 +157,7 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg-page)' }}>
       <Sidebar />
-      <main className="flex-1 sidebar-main px-10 py-10 max-w-6xl">
+      <main className="flex-1 sidebar-main px-4 md:px-10 py-6 md:py-10 max-w-6xl">
 
         {/* Header */}
         <div className="mb-8">

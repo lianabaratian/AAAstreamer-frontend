@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useWatchlist } from '../context/WatchlistContext'
 import Sidebar from '../components/Sidebar'
@@ -16,10 +16,10 @@ function MovieGrid({ movies, emptyMessage }) {
     )
   }
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
       {movies.map(movie => (
         <div key={movie.id} onClick={() => navigate(`/movie/${movie.id}`)}
-          className="flex flex-col cursor-pointer group w-36 flex-shrink-0">
+          className="flex flex-col cursor-pointer group">
           <div className="rounded-xl overflow-hidden group-hover:scale-105 transition-all duration-200"
             style={{ aspectRatio: '2/3', border: '1px solid var(--border)' }}>
             {movie.poster_url
@@ -41,6 +41,10 @@ export default function WatchlistPage() {
   const location = useLocation()
   const [tab, setTab] = useState(location.state?.tab ?? 'watchlist')
 
+  useEffect(() => {
+    if (location.state?.tab) setTab(location.state.tab)
+  }, [location.state?.tab])
+
   const watchedMovies = Object.values(watched)
   const watchlistMovies = Object.values(watchlist)
 
@@ -50,9 +54,12 @@ export default function WatchlistPage() {
   ]
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg-page)' }}>
+    <div className="min-h-screen flex relative" style={{ background: 'var(--bg-page)' }}>
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img src="/back.svg" alt="" className="w-full h-full object-cover" style={{ opacity: 0.2 }} />
+      </div>
       <Sidebar />
-      <main className="flex-1 sidebar-main px-10 py-10 max-w-6xl">
+      <main className="relative z-10 flex-1 sidebar-main px-4 md:px-10 py-6 md:py-10 max-w-6xl">
 
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-1">

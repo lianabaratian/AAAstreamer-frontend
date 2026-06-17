@@ -63,7 +63,7 @@ export default function PersonPage() {
 
       <Sidebar onNavigate={(p) => { if (p === 'home') navigate('/') }} />
 
-      <main className="flex-1 sidebar-main px-10 py-10 max-w-5xl">
+      <main className="flex-1 sidebar-main px-4 md:px-10 py-6 md:py-10 max-w-5xl">
 
         {/* Back */}
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors text-sm">
@@ -72,19 +72,19 @@ export default function PersonPage() {
         </button>
 
         {/* Profile header */}
-        <div className="flex gap-10 mb-12">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-10 md:mb-12">
 
           {/* Photo */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex justify-center md:block">
             {person.profile_url ? (
               <img
                 src={person.profile_url}
                 alt={person.name}
-                className="w-56 rounded-2xl object-cover object-top shadow-2xl"
+                className="w-40 md:w-56 rounded-2xl object-cover object-top shadow-2xl"
                 style={{ aspectRatio: '2/3' }}
               />
             ) : (
-              <div className="w-56 rounded-2xl flex items-center justify-center shadow-2xl"
+              <div className="w-40 md:w-56 rounded-2xl flex items-center justify-center shadow-2xl"
                 style={{ aspectRatio: '2/3', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                 <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(147,51,234,0.4)" strokeWidth="1.2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -97,7 +97,7 @@ export default function PersonPage() {
           {/* Info */}
           <div className="flex flex-col justify-start pt-2 flex-1">
             <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <h1 className="text-4xl font-bold text-white leading-tight">{person.name}</h1>
+              <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">{person.name}</h1>
               {fromRole && (
                 <span className="px-3 py-1 rounded-full text-xs font-semibold capitalize" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
                   {fromRole}

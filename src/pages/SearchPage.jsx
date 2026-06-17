@@ -40,13 +40,16 @@ export default function SearchPage() {
   const isSearching = query.trim().length > 0
 
   return (
-    <div className="min-h-screen text-white flex" style={{ background: 'var(--bg-page)' }}>
+    <div className="min-h-screen text-white flex relative" style={{ background: 'var(--bg-page)' }}>
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img src="/back.svg" alt="" className="w-full h-full object-cover" style={{ opacity: 0.2 }} />
+      </div>
       <Sidebar activePage="search" onNavigate={(page) => {
         if (page === 'home') navigate('/')
         else if (page === 'list') navigate('/list')
       }} />
 
-      <main className="flex-1 sidebar-main px-8 py-8">
+      <main className="relative z-10 flex-1 sidebar-main px-4 md:px-8 py-6 md:py-8">
 
         {/* Top logo */}
         <div className="flex items-center justify-center py-5 mb-2">
@@ -111,13 +114,13 @@ function TopSearches({ movies, loading, onMovieClick }) {
     <div>
       <h2 className="text-lg font-semibold text-white mb-4">Top Searches</h2>
       {loading ? (
-        <div className="flex flex-wrap gap-4">
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
           {Array.from({ length: 18 }).map((_, i) => (
             <div key={i} className="flex-shrink-0 w-36 rounded-xl animate-pulse" style={{ aspectRatio: '2/3', background: 'var(--skeleton)' }} />
           ))}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-4">
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
           {movies.map(movie => (
             <MovieGridCard key={movie.id} movie={movie} onClick={() => onMovieClick(movie.id)} />
           ))}
@@ -166,7 +169,7 @@ function MovieGridCard({ movie, onClick }) {
   const [imgError, setImgError] = useState(false)
   if (!movie.poster_url || imgError) return null
   return (
-    <div onClick={onClick} className="relative flex-shrink-0 w-36 cursor-pointer group">
+    <div onClick={onClick} className="relative cursor-pointer group">
       <div className="relative rounded-xl overflow-hidden border border-white/10 transition-transform duration-300 group-hover:scale-105"
         style={{ aspectRatio: '2/3' }}>
         <img src={movie.poster_url} alt={movie.movie_title} className="w-full h-full object-cover"
