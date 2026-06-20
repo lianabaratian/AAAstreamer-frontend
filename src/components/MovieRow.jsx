@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import MovieCard from './MovieCard'
+import { MovieCardSkeleton } from './Skeleton'
 
 export default function MovieRow({ title, movies = [], loading, getExtra, onShowAll }) {
   const scrollRef = useRef(null)
@@ -20,7 +21,7 @@ export default function MovieRow({ title, movies = [], loading, getExtra, onShow
   }
 
   return (
-    <section className="mb-10">
+    <section className="mb-0">
       {/* Row header */}
       <div className="flex items-center gap-3 mb-4 px-1">
         <button
@@ -56,8 +57,7 @@ export default function MovieRow({ title, movies = [], loading, getExtra, onShow
         >
           {loading
             ? Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-36 rounded-xl aspect-[2/3] animate-pulse"
-                  style={{ background: 'var(--skeleton)' }} />
+                <MovieCardSkeleton key={i} width={144} />
               ))
             : movies.map((movie) => (
                 <MovieCard

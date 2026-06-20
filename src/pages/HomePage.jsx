@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import MovieRow from '../components/MovieRow'
+import { GenreCardSkeleton } from '../components/Skeleton'
+import { Waves } from '../components/Waves'
+import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import {
   getRecommendedMovies,
@@ -12,6 +15,22 @@ import {
   getBecauseYouEnjoyed,
   fetchGenreCards,
 } from '../api/movies'
+
+function GlassRow({ children, isDark }) {
+  return (
+    <div className="rounded-2xl px-5 py-3" style={{
+      background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.38)',
+      backdropFilter: 'blur(28px) saturate(1.5)',
+      WebkitBackdropFilter: 'blur(28px) saturate(1.5)',
+      border: isDark ? '1px solid rgba(147,51,234,0.12)' : '1px solid rgba(255,255,255,0.65)',
+      boxShadow: isDark
+        ? '0 4px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)'
+        : '0 4px 32px rgba(147,51,234,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
+    }}>
+      {children}
+    </div>
+  )
+}
 
 function GenreCard({ genre, posterUrl, onClick }) {
   return (
@@ -38,7 +57,7 @@ function GenreCard({ genre, posterUrl, onClick }) {
             {genre.name}
           </span>
         </div>
-        <div className="absolute inset-0 rounded-xl ring-2 ring-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ background: 'rgba(0,0,0,0.18)' }} />
       </div>
     </div>
   )
@@ -63,7 +82,7 @@ function GenreRow({ genres, loading, onGenreClick, onShowAll }) {
   }
 
   return (
-    <div className="mb-8">
+    <div className="mb-0">
       <div className="flex items-center gap-2 mb-4 px-1">
         <button onClick={() => onShowAll?.()} className="flex items-center gap-2 group/title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round">
@@ -94,8 +113,7 @@ function GenreRow({ genres, loading, onGenreClick, onShowAll }) {
         <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex-shrink-0 rounded-xl animate-pulse"
-                  style={{ width: '140px', aspectRatio: '2/3', background: 'var(--skeleton)' }} />
+                <GenreCardSkeleton key={i} />
               ))
             : genres.map(({ genre, posterUrl }) => (
                 <GenreCard key={genre.id} genre={genre} posterUrl={posterUrl} onClick={() => onGenreClick(genre)} />
@@ -130,6 +148,7 @@ function GenreRow({ genres, loading, onGenreClick, onShowAll }) {
 
 export default function HomePage() {
   const { user } = useAuth()
+  const { isDark } = useTheme()
   const navigate = useNavigate()
   const [activePage, setActivePage] = useState('home')
 
@@ -218,6 +237,10 @@ export default function HomePage() {
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img src="/back.svg" alt="" className="w-full h-full object-cover" style={{ opacity: 0.2 }} />
       </div>
+      {/* Purple waves — fixed behind everything */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ opacity: isDark ? 0.4 : 0.22 }}>
+        <Waves strokeColor="#9333ea" backgroundColor="transparent" pointerSize={0} />
+      </div>
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
 
       <main className="relative z-10 flex-1 sidebar-main px-4 md:px-8 overflow-hidden">
@@ -248,51 +271,70 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Glassy container for all rows */}
+        <div className="flex flex-col gap-4">
+
         {/* Has recs → show recommended first */}
-        {recommended.length > 0 && (
-          <MovieRow
-            title="Recommended for You"
-            movies={recommended}
-            loading={loadingRec}
-            onShowAll={() => showAll('Recommended for You', recommended)}
-          />
+        {(loadingRec || recommended.length > 0) && (
+          <GlassRow isDark={isDark}>
+            <MovieRow
+              title="Recommended for You"
+              movies={recommended}
+              loading={loadingRec}
+              getExtra={(m) => [m.year, m.duration ? `${m.duration} min` : null].filter(Boolean).join(' · ') || null}
+              onShowAll={() => showAll('Recommended for You', recommended)}
+            />
+          </GlassRow>
         )}
 
-        {/* Genre row — below recommended (or at top if no recs) */}
-        <GenreRow genres={genreCards} loading={loadingGenres} onGenreClick={showGenre} onShowAll={() => navigate('/genres')} />
+        {/* Genre row */}
+        <GlassRow isDark={isDark}>
+          <GenreRow genres={genreCards} loading={loadingGenres} onGenreClick={showGenre} onShowAll={() => navigate('/genres')} />
+        </GlassRow>
 
-        <MovieRow
-          title="Top Rated"
-          movies={topRated}
-          loading={loadingTop}
-          getExtra={(m) => `⭐ ${m.average_rating?.toFixed(1) ?? '—'}  ·  ${m.rating_count ?? 0} ratings`}
-          onShowAll={() => showAll('Top Rated', topRated)}
-        />
+        <GlassRow isDark={isDark}>
+          <MovieRow
+            title="Top Rated"
+            movies={topRated}
+            loading={loadingTop}
+            getExtra={(m) => `⭐ ${m.average_rating?.toFixed(1) ?? '—'}  ·  ${m.rating_count ?? 0} ratings`}
+            onShowAll={() => showAll('Top Rated', topRated)}
+          />
+        </GlassRow>
 
-        <MovieRow
-          title="Trending"
-          movies={trending}
-          loading={loadingTrend}
-          getExtra={(m) => `⭐ ${m.average_rating?.toFixed(1) ?? '—'}  ·  ${m.rating_count ?? 0} ratings`}
-          onShowAll={() => showAll('Trending', trending)}
-        />
+        <GlassRow isDark={isDark}>
+          <MovieRow
+            title="Trending"
+            movies={trending}
+            loading={loadingTrend}
+            getExtra={(m) => `⭐ ${m.average_rating?.toFixed(1) ?? '—'}  ·  ${m.rating_count ?? 0} ratings`}
+            onShowAll={() => showAll('Trending', trending)}
+          />
+        </GlassRow>
 
-        <MovieRow
-          title="New Arrivals"
-          movies={newMovies}
-          loading={loadingNew}
-          getExtra={(m) => m.year ? `${m.year}${m.duration ? ` · ${m.duration} min` : ''}` : null}
-          onShowAll={() => showAll('New Arrivals', newMovies)}
-        />
+        <GlassRow isDark={isDark}>
+          <MovieRow
+            title="New Arrivals"
+            movies={newMovies}
+            loading={loadingNew}
+            getExtra={(m) => m.year ? `${m.year}${m.duration ? ` · ${m.duration} min` : ''}` : null}
+            onShowAll={() => showAll('New Arrivals', newMovies)}
+          />
+        </GlassRow>
 
         {becauseMovie && (
-          <MovieRow
-            title={`Because You Enjoyed "${becauseMovie.movie_title}"`}
-            movies={becauseMovies}
-            loading={loadingBecause}
-            onShowAll={() => showAll(`Because You Enjoyed "${becauseMovie.movie_title}"`, becauseMovies)}
-          />
+          <GlassRow isDark={isDark}>
+            <MovieRow
+              title={`Because You Enjoyed "${becauseMovie.movie_title}"`}
+              movies={becauseMovies}
+              loading={loadingBecause}
+              getExtra={(m) => [m.year, m.duration ? `${m.duration} min` : null].filter(Boolean).join(' · ') || null}
+              onShowAll={() => showAll(`Because You Enjoyed "${becauseMovie.movie_title}"`, becauseMovies)}
+            />
+          </GlassRow>
         )}
+
+        </div>
 
 
       </main>

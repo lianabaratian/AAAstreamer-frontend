@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
+import { Waves } from '../components/Waves'
+import { useTheme } from '../context/ThemeContext'
+import { BrowseCardSkeleton } from '../components/Skeleton'
 import api from '../api/client'
 import {
   getRecommendedMovies,
@@ -10,6 +13,44 @@ import {
   getBecauseYouEnjoyed,
   getTrendingByGenre,
 } from '../api/movies'
+
+const GENRE_COLORS = {
+  'action':           '#D32F2F',
+  'adult':            '#900C3F',
+  'adventure':        '#2E8B57',
+  'animation':        '#FFC107',
+  'biography':        '#795548',
+  'comedy':           '#FFB300',
+  'crime':            '#2C3E50',
+  'documentary':      '#607D8B',
+  'drama':            '#3F51B5',
+  'family':           '#4FC3F7',
+  'fantasy':          '#8E44AD',
+  'film-noir':        '#1C1C1C',
+  'noir':             '#1C1C1C',
+  'history':          '#A1887F',
+  'horror':           '#8B0000',
+  'music':            '#E91E63',
+  'musical':          '#F1C40F',
+  'mystery':          '#00838F',
+  'news':             '#1565C0',
+  'reality-tv':       '#FF5722',
+  'romance':          '#EC407A',
+  'science fiction':  '#00BCD4',
+  'sci-fi':           '#00BCD4',
+  'short':            '#2ECC71',
+  'sport':            '#E67E22',
+  'talk-show':        '#F39C12',
+  'thriller':         '#D35400',
+  'war':              '#556B2F',
+  'western':          '#8B4513',
+}
+
+function getGenreColor(name) {
+  if (!name) return null
+  const key = name.toLowerCase()
+  return Object.entries(GENRE_COLORS).find(([k]) => key.includes(k))?.[1] ?? null
+}
 
 function formatDuration(mins) {
   if (!mins) return null
@@ -129,11 +170,14 @@ export default function BrowsePage() {
   const location = useLocation()
   const { state, search } = location
   const navigate = useNavigate()
+  const { isDark } = useTheme()
   const params = new URLSearchParams(search)
   const category = params.get('category')
   const genreId = params.get('genre_id')
   const genreName = params.get('genre_name')
   const meta = category ? CATEGORY_META[category] : null
+  const genreColor = genreId ? getGenreColor(genreName) : null
+  const fadeStop = isDark ? '#0e0d14' : '#f0eff8'
 
   const [movies, setMovies] = useState((state?.movies ?? []).filter(m => m.poster_url))
   const [title, setTitle] = useState(
@@ -170,25 +214,55 @@ export default function BrowsePage() {
   }, [category, genreId])
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg-page)' }}>
-      <Sidebar />
-      <main className="flex-1 sidebar-main px-10 py-10">
+    <div className="min-h-screen flex relative" style={{ background: 'var(--bg-page)' }}>
 
-        {/* Header */}
+      {/* Genre background: single color waves, no gradient */}
+      {genreColor && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+          {/* Solid color blob at top */}
+          <div className="absolute inset-0" style={{
+            background: genreColor,
+            opacity: isDark ? 0.18 : 0.12,
+          }} />
+          {/* Waves in the genre color */}
+          <div className="absolute inset-0" style={{ opacity: isDark ? 0.45 : 0.28 }}>
+            <Waves strokeColor={genreColor} backgroundColor="transparent" pointerSize={0} />
+          </div>
+          {/* Fade to page bg from ~40% down */}
+          <div className="absolute inset-0" style={{
+            background: `linear-gradient(to bottom, transparent 20%, ${fadeStop} 70%)`,
+          }} />
+        </div>
+      )}
+
+      <Sidebar />
+      <main className="relative z-10 flex-1 sidebar-main px-10 py-10">
+
+        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm mb-6 transition-colors"
-          style={{ color: 'var(--text-secondary)' }}
+          style={{ color: genreColor ?? 'var(--text-secondary)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
           Back
         </button>
 
-        <div className="flex items-center gap-3 mb-8">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-          </svg>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h1>
+        {/* Genre header — glassy pill */}
+        <div className="flex items-center gap-3 mb-8 px-5 py-4 rounded-2xl w-fit"
+          style={genreColor ? {
+            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.4)',
+            backdropFilter: 'blur(20px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+            border: `1px solid ${genreColor}40`,
+            boxShadow: `0 4px 24px ${genreColor}28`,
+          } : {}}>
+          {!genreColor && (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            </svg>
+          )}
+          <h1 className="text-2xl font-bold" style={{ color: genreColor ?? 'var(--text-primary)' }}>{title}</h1>
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{movies.length} movies</span>
         </div>
 
@@ -196,7 +270,7 @@ export default function BrowsePage() {
         {loading ? (
           <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-40 rounded-2xl animate-pulse" style={{ background: 'var(--skeleton)' }} />
+              <BrowseCardSkeleton key={i} />
             ))}
           </div>
         ) : (

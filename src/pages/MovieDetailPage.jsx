@@ -10,6 +10,7 @@ import { getSimilarMovies } from '../api/movies'
 import api from '../api/client'
 import { useWatchlist } from '../context/WatchlistContext'
 import { Waves } from '../components/Waves'
+import { MovieDetailSkeleton, ActorsSkeleton, ReviewsSkeleton } from '../components/Skeleton'
 
 const ROLE_DIRECTOR = 2
 const ROLE_ACTOR = 1
@@ -172,8 +173,22 @@ export default function MovieDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-page)' }}>
-        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex relative overflow-x-hidden" style={{ background: 'var(--bg-page)' }}>
+        <Sidebar activePage="home" />
+        <main className="flex-1 sidebar-main px-4 md:px-10 py-6 md:py-10 max-w-6xl">
+          <div className="skeleton w-16 h-4 rounded mb-8" />
+          <div className="rounded-3xl px-6 py-6" style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.35)', backdropFilter: 'blur(32px)', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.6)' }}>
+            <MovieDetailSkeleton />
+            <div className="mt-10">
+              <div className="skeleton w-32 h-5 rounded mb-4" />
+              <ActorsSkeleton />
+            </div>
+            <div className="mt-10">
+              <div className="skeleton w-24 h-5 rounded mb-4" />
+              <ReviewsSkeleton />
+            </div>
+          </div>
+        </main>
       </div>
     )
   }

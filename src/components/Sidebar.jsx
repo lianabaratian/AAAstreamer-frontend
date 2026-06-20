@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar({ activePage, onNavigate }) {
-  const [expanded, setExpanded] = useState(() => localStorage.getItem('sidebar_expanded') === 'true')
+  const [expanded, setExpanded] = useState(false)
 
   const toggleExpanded = (val) => {
     setExpanded(val)
@@ -13,6 +13,8 @@ export default function Sidebar({ activePage, onNavigate }) {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const params = new URLSearchParams(location.search)
+  const browseCategory = params.get('category')
   const currentPage = activePage ?? (
     location.pathname === '/' ? 'home' :
     location.pathname === '/search' ? 'search' :
@@ -20,7 +22,8 @@ export default function Sidebar({ activePage, onNavigate }) {
       ? (location.state?.tab === 'watched' ? 'watched' : 'watchlist') :
     location.pathname === '/history' ? 'history' :
     location.pathname === '/settings' ? 'settings' :
-    location.pathname === '/browse' ? 'browse' : ''
+    location.pathname === '/genres' ? 'genres' :
+    location.pathname === '/browse' ? (browseCategory ?? 'browse') : ''
   )
 
   useEffect(() => {
@@ -40,10 +43,16 @@ export default function Sidebar({ activePage, onNavigate }) {
     return (
       <button
         onClick={() => go(path, page)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-          active ? 'bg-purple-600 text-white' : 'hover:bg-purple-600/20'
-        } ${bold ? 'font-bold' : 'font-medium'}`}
-        style={{ color: active ? '#fff' : 'var(--text-primary)' }}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${bold ? 'font-bold' : 'font-medium'}`}
+        style={{
+          color: active ? '#fff' : 'rgba(255,255,255,0.85)',
+          background: active
+            ? 'linear-gradient(135deg, #9333ea, #6d28d9)'
+            : 'transparent',
+          boxShadow: active ? '0 2px 12px rgba(147,51,234,0.35)' : 'none',
+        }}
+        onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(147,51,234,0.15)' }}
+        onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
       >
         <span className="flex-shrink-0 w-5 flex items-center justify-center">{icon}</span>
         <span className="truncate">{label}</span>
@@ -51,16 +60,25 @@ export default function Sidebar({ activePage, onNavigate }) {
     )
   }
 
-  const SubItem = ({ label, path, page }) => (
-    <button
-      onClick={() => go(path, page)}
-      className="w-full flex items-center gap-2 pl-11 pr-3 py-1.5 rounded-xl text-xs transition-colors hover:text-purple-300"
-      style={{ color: isActive(page) ? '#a855f7' : 'var(--text-muted)' }}
-    >
-      <span className="w-1 h-1 rounded-full flex-shrink-0 bg-current" />
-      {label}
-    </button>
-  )
+  const SubItem = ({ label, path, page }) => {
+    const active = isActive(page)
+    return (
+      <button
+        onClick={() => go(path, page)}
+        className="w-full flex items-center gap-2 pl-10 pr-3 py-1.5 rounded-lg text-xs transition-all"
+        style={{
+          color: active ? '#c084fc' : 'rgba(255,255,255,0.5)',
+          background: active ? 'rgba(147,51,234,0.12)' : 'transparent',
+          fontWeight: active ? 600 : 400,
+        }}
+        onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(147,51,234,0.08)'; e.currentTarget.style.color = '#c084fc' }}}
+        onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all ${active ? 'bg-purple-400' : 'bg-current opacity-40'}`} />
+        {label}
+      </button>
+    )
+  }
 
   /* ── Icons for collapsed pills ── */
   const iconBtn = (page, path, svgPath, state) => {
@@ -81,7 +99,7 @@ export default function Sidebar({ activePage, onNavigate }) {
     <>
     {/* Mobile top bar */}
     <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14"
-      style={{ background: 'var(--bg-nav)', borderBottom: '1px solid var(--border-subtle)', backdropFilter: 'blur(12px)' }}>
+      style={{ background: 'rgba(15,12,25,0.55)', borderBottom: '1px solid rgba(147,51,234,0.15)', backdropFilter: 'blur(24px) saturate(1.4)', WebkitBackdropFilter: 'blur(24px) saturate(1.4)' }}>
       <button onClick={() => toggleExpanded(!expanded)} className="w-9 h-9 flex items-center justify-center rounded-xl"
         style={{ color: 'var(--text-primary)' }}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -94,7 +112,7 @@ export default function Sidebar({ activePage, onNavigate }) {
           <line x1="7" y1="2" x2="7" y2="22" /><line x1="17" y1="2" x2="17" y2="22" />
           <line x1="2" y1="12" x2="22" y2="12" />
         </svg>
-        <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>AAA<span style={{ color: '#9333ea' }}>Streamer</span></span>
+        <span className="font-bold text-sm" style={{ color: '#fff' }}>AAA<span style={{ color: '#c084fc' }}>Streamer</span></span>
       </div>
       <button onClick={() => go('/settings', 'settings')}
         className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 border-2"
@@ -116,9 +134,11 @@ export default function Sidebar({ activePage, onNavigate }) {
       style={{
         width: expanded ? '224px' : '64px',
         transition: 'width 0.25s ease',
-        background: 'var(--bg-nav)',
-        backdropFilter: 'blur(12px)',
-        borderRight: '1px solid var(--border-subtle)',
+        background: 'rgba(15, 12, 25, 0.55)',
+        backdropFilter: 'blur(24px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+        borderRight: '1px solid rgba(147,51,234,0.15)',
+        boxShadow: '4px 0 32px rgba(0,0,0,0.25)',
       }}
     >
       <div className="md:hidden" style={{ display: expanded ? 'block' : 'none' }} />
@@ -171,14 +191,14 @@ export default function Sidebar({ activePage, onNavigate }) {
                 className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-colors ${
                   isActive('history') ? 'bg-purple-600 text-white' : 'hover:bg-purple-600/30 hover:text-purple-300'
                 }`}
-                style={{ color: isActive('history') ? '#fff' : 'var(--text-secondary)' }}
+                style={{ color: isActive('history') ? '#fff' : 'rgba(255,255,255,0.7)' }}
               >
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                 </svg>
               </button>
               <span className="absolute left-12 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0 group-hover/h:opacity-100 transition-opacity pointer-events-none"
-                style={{ background: 'var(--bg-dropdown)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+                style={{ background: 'rgba(30,20,50,0.9)', color: '#fff', border: '1px solid rgba(147,51,234,0.3)' }}>
                 History
               </span>
             </div>
@@ -211,7 +231,7 @@ export default function Sidebar({ activePage, onNavigate }) {
             <button
               onClick={() => toggleExpanded(false)}
               className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
-              style={{ color: 'var(--text-muted)' }}
+              style={{ color: 'rgba(255,255,255,0.6)' }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <line x1="4" y1="6" x2="20" y2="6" />
@@ -239,20 +259,20 @@ export default function Sidebar({ activePage, onNavigate }) {
               </svg>
             } label="Home" page="home" path="/" bold />
 
-            <SubItem label="Recommended for You" path="/browse?category=recommended" page="browse" />
-            <SubItem label="Top Rated" path="/browse?category=top-rated" page="browse" />
-            <SubItem label="Trending" path="/browse?category=trending" page="browse" />
-            <SubItem label="New Arrivals" path="/browse?category=new-arrivals" page="browse" />
-            <SubItem label="Because You Enjoyed" path="/browse?category=because-you-enjoyed" page="browse" />
+            <SubItem label="Recommended for You" path="/browse?category=recommended" page="recommended" />
+            <SubItem label="Top Rated" path="/browse?category=top-rated" page="top-rated" />
+            <SubItem label="Trending" path="/browse?category=trending" page="trending" />
+            <SubItem label="New Arrivals" path="/browse?category=new-arrivals" page="new-arrivals" />
+            <SubItem label="Because You Enjoyed" path="/browse?category=because-you-enjoyed" page="because-you-enjoyed" />
             <SubItem label="Genres" path="/genres" page="genres" />
 
             <div className="my-3 mx-1" style={{ height: '1px', background: 'var(--border-subtle)' }} />
-            <p className="px-3 pb-1 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Lists</p>
+            <p className="px-3 pb-1 text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Lists</p>
 
             <button
               onClick={() => { navigate('/watchlist', { state: { tab: 'watchlist' } }); onNavigate?.('watchlist') }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('watchlist') ? 'bg-purple-600' : 'hover:bg-purple-600/20'}`}
-              style={{ color: isActive('watchlist') ? '#fff' : 'var(--text-primary)' }}
+              style={{ color: isActive('watchlist') ? '#fff' : 'rgba(255,255,255,0.85)' }}
             >
               <span className="flex-shrink-0 w-5 flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -265,7 +285,7 @@ export default function Sidebar({ activePage, onNavigate }) {
             <button
               onClick={() => { navigate('/watchlist', { state: { tab: 'watched' } }); onNavigate?.('watched') }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${isActive('watched') ? 'bg-purple-600' : 'hover:bg-purple-600/20'}`}
-              style={{ color: isActive('watched') ? '#fff' : 'var(--text-primary)' }}
+              style={{ color: isActive('watched') ? '#fff' : 'rgba(255,255,255,0.85)' }}
             >
               <span className="flex-shrink-0 w-5 flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -307,7 +327,7 @@ export default function Sidebar({ activePage, onNavigate }) {
                       </svg>
                   }
                 </div>
-                <span className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-sm font-medium truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
                   {user?.username ?? 'Profile'}
                 </span>
               </button>

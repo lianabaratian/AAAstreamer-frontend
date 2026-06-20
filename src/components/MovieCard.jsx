@@ -157,8 +157,8 @@ export default function MovieCard({ movie, extra }) {
           )}
         </div>
 
-        <p className="mt-1.5 text-xs font-medium truncate px-0.5" style={{ color: 'var(--text-primary)' }}>{movie.movie_title}</p>
-        {extra && <p className="text-gray-500 text-xs truncate px-0.5">{extra}</p>}
+        <p className="mt-1.5 text-xs font-medium truncate px-0.5 text-center" style={{ color: 'var(--text-primary)' }}>{movie.movie_title}</p>
+        {extra && <p className="text-gray-500 text-xs truncate px-0.5 text-center">{extra}</p>}
       </div>
 
       {showRate && <RateModal movie={movie} onClose={() => setShowRate(false)} />}
