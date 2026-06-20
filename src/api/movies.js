@@ -69,27 +69,32 @@ export const getTrendingByGenre = (genreId, limit = 20) =>
 export const getGenres = () =>
   api.get('/genres', { params: { limit: 50 } }).then(r => r.data)
 
-export const fetchGenreCards = async (maxGenres = 14) => {
+export const fetchGenreCards = async (maxGenres = 27) => {
   const genres = await getGenres()
   const usedMovieIds = new Set()
   const results = []
 
   for (const genre of genres.slice(0, maxGenres)) {
     try {
-      const trending = await getTrendingByGenre(genre.id, 20)
+      const trending = await getTrendingByGenre(genre.id, 50)
       let picked = null
+      let fallback = null
+
       for (const t of trending) {
-        if (usedMovieIds.has(t.id)) continue
         const movie = await api.get(`/movies/${t.id}`).then(r => r.data)
-        if (movie.poster_url) {
+        if (!movie.poster_url) continue
+        if (!usedMovieIds.has(t.id)) {
           usedMovieIds.add(t.id)
           picked = { genre, posterUrl: movie.poster_url }
           break
         }
+        if (!fallback) fallback = { genre, posterUrl: movie.poster_url }
       }
-      if (picked) results.push(picked)
+
+      const card = picked ?? fallback
+      if (card) results.push(card)
     } catch {
-      // skip failed genres
+      // skip genres with no data
     }
   }
 

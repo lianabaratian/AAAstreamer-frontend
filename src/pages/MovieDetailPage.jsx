@@ -9,10 +9,99 @@ import { getMoviePeople, getPerson, getMovieStats, getMovieReviews } from '../ap
 import { getSimilarMovies } from '../api/movies'
 import api from '../api/client'
 import { useWatchlist } from '../context/WatchlistContext'
+import { Waves } from '../components/Waves'
 
 const ROLE_DIRECTOR = 2
 const ROLE_ACTOR = 1
 const ROLE_WRITER = 3
+
+// ── Genre colors ───────────────────────────────────────────────────────────
+const GENRE_COLORS = {
+  'action':           '#D32F2F',
+  'adult':            '#900C3F',
+  'adventure':        '#2E8B57',
+  'animation':        '#FFC107',
+  'biography':        '#795548',
+  'comedy':           '#FFB300',
+  'crime':            '#2C3E50',
+  'documentary':      '#607D8B',
+  'drama':            '#3F51B5',
+  'family':           '#4FC3F7',
+  'fantasy':          '#8E44AD',
+  'film-noir':        '#1C1C1C',
+  'noir':             '#1C1C1C',
+  'history':          '#A1887F',
+  'horror':           '#8B0000',
+  'music':            '#E91E63',
+  'musical':          '#F1C40F',
+  'mystery':          '#00838F',
+  'news':             '#1565C0',
+  'reality-tv':       '#FF5722',
+  'romance':          '#EC407A',
+  'science fiction':  '#00BCD4',
+  'sci-fi':           '#00BCD4',
+  'short':            '#2ECC71',
+  'sport':            '#E67E22',
+  'talk-show':        '#F39C12',
+  'thriller':         '#D35400',
+  'war':              '#556B2F',
+  'western':          '#8B4513',
+}
+
+function getGenreColors(genreNames) {
+  const colors = []
+  for (const name of genreNames.slice(0, 3)) {
+    const key = name.toLowerCase()
+    const color = Object.entries(GENRE_COLORS).find(([k]) => key.includes(k))?.[1]
+    if (color && !colors.includes(color)) colors.push(color)
+  }
+  if (colors.length === 0) colors.push('#3F51B5')
+  return colors
+}
+
+function GenreBackground({ genreColors, isDark }) {
+  const fadeStop = isDark ? '#0e0d14' : '#f0eff8'
+  const op = isDark ? 0.65 : 0.4
+  const positions = [
+    { cx: '20%', cy: '0%', r: '65%' },
+    { cx: '80%', cy: '5%', r: '55%' },
+    { cx: '50%', cy: '25%', r: '45%' },
+  ]
+  // Waves stroke: blend the primary genre color with a hint of transparency
+  const primaryColor = genreColors[0] ?? '#3F51B5'
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      {/* Gradient blobs — bottom layer */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800"
+        preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          {genreColors.map((color, i) => (
+            <radialGradient key={i} id={`gc${i}`} cx={positions[i].cx} cy={positions[i].cy} r={positions[i].r}>
+              <stop offset="0%" stopColor={color} stopOpacity={op - i * 0.08}/>
+              <stop offset="100%" stopColor={color} stopOpacity="0"/>
+            </radialGradient>
+          ))}
+        </defs>
+        {genreColors.map((_, i) => (
+          <rect key={i} width="1200" height="800" fill={`url(#gc${i})`}/>
+        ))}
+      </svg>
+      {/* Animated wave lines colored by the primary genre — middle layer */}
+      <div className="absolute inset-0" style={{ opacity: isDark ? 0.55 : 0.35 }}>
+        <Waves
+          strokeColor={primaryColor}
+          backgroundColor="transparent"
+          pointerSize={0}
+        />
+      </div>
+      {/* Fade to page background — top layer */}
+      <div className="absolute inset-0" style={{
+        background: `linear-gradient(to bottom, transparent 30%, ${fadeStop} 82%)`
+      }}/>
+    </div>
+  )
+}
 
 export default function MovieDetailPage() {
   const { id } = useParams()
@@ -97,41 +186,13 @@ export default function MovieDetailPage() {
   const meaningfulReviews = reviews.filter(r => r.review_title?.trim() || r.review_body?.trim() || r.rating != null)
   const previewReviews = meaningfulReviews.slice(0, 3)
 
+  const genreColors = getGenreColors((movie.genres ?? []).map(g => g.name))
+
   return (
     <div className="min-h-screen text-white flex relative overflow-x-hidden" style={{ background: 'var(--bg-page)' }}>
 
-      {/* ── Poster-derived blurred background ── */}
-      {movie.poster_url && (
-        <>
-          {/* Blurred poster spread across top */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ zIndex: 0 }}
-          >
-            <img
-              src={movie.poster_url}
-              alt=""
-              aria-hidden
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] max-w-none"
-              style={{
-                filter: 'blur(100px) saturate(1.8)',
-                opacity: isDark ? 0.35 : 0.55,
-                transform: 'translateX(-30%) scale(1.6)',
-                transformOrigin: 'top center',
-              }}
-            />
-            {/* Gradient fades the blur into the page background */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: isDark
-                  ? 'linear-gradient(to bottom, rgba(14,13,20,0.05) 0%, rgba(14,13,20,0.45) 30%, rgba(14,13,20,0.88) 60%, rgba(14,13,20,1) 100%)'
-                  : 'linear-gradient(to bottom, rgba(240,239,248,0.0) 0%, rgba(240,239,248,0.35) 30%, rgba(240,239,248,0.78) 60%, rgba(240,239,248,1) 100%)',
-              }}
-            />
-          </div>
-        </>
-      )}
+      {/* ── Genre-themed atmospheric background ── */}
+      <GenreBackground genreColors={genreColors} isDark={isDark} />
 
       <Sidebar activePage="home" onNavigate={(p) => p === 'home' && navigate('/')} />
 
@@ -142,6 +203,18 @@ export default function MovieDetailPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
           Back
         </button>
+
+        {/* Single glass card wrapping all content */}
+        <div className="rounded-3xl px-6 py-6"
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.35)',
+            backdropFilter: 'blur(32px) saturate(1.6)',
+            WebkitBackdropFilter: 'blur(32px) saturate(1.6)',
+            border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.6)',
+            boxShadow: isDark
+              ? '0 0 80px 40px rgba(14,13,20,0.32), inset 0 1px 0 rgba(255,255,255,0.08)'
+              : '0 0 80px 40px rgba(255,255,255,0.35), inset 0 1px 0 rgba(255,255,255,0.8)',
+          }}>
 
         {/* Poster + Info */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-10 md:mb-14">
@@ -374,6 +447,7 @@ export default function MovieDetailPage() {
             )}
           </section>
         )}
+        </div> {/* end single glass card */}
       </main>
 
       {reviewsModalOpen && createPortal(
