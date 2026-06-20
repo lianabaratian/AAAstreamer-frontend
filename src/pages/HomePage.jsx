@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import MovieRow from '../components/MovieRow'
@@ -10,7 +10,123 @@ import {
   getMostRatedMovies,
   getNewMovies,
   getBecauseYouEnjoyed,
+  fetchGenreCards,
 } from '../api/movies'
+
+function GenreCard({ genre, posterUrl, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      className="relative flex-shrink-0 cursor-pointer group"
+      style={{ width: '140px', aspectRatio: '2/3' }}
+    >
+      <div className="w-full h-full rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+        {posterUrl ? (
+          <img
+            src={posterUrl}
+            alt={genre.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full" style={{ background: 'var(--bg-surface)' }} />
+        )}
+        <div className="absolute inset-0 rounded-xl" style={{
+          background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.08) 100%)'
+        }} />
+        <div className="absolute inset-0 flex items-center justify-center px-2">
+          <span className="text-white genre-label font-bold text-sm text-center leading-tight drop-shadow-lg line-clamp-3">
+            {genre.name}
+          </span>
+        </div>
+        <div className="absolute inset-0 rounded-xl ring-2 ring-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </div>
+  )
+}
+
+function GenreRow({ genres, loading, onGenreClick, onShowAll }) {
+  const scrollRef = useRef(null)
+  const [rightClicks, setRightClicks] = useState(0)
+
+  const scroll = (dir) => {
+    scrollRef.current?.scrollBy({ left: dir * 600, behavior: 'smooth' })
+    if (dir < 0) setRightClicks(0)
+  }
+
+  const handleRightClick = () => {
+    if (rightClicks === 0) {
+      scrollRef.current?.scrollBy({ left: 600, behavior: 'smooth' })
+      setRightClicks(1)
+    } else {
+      onShowAll?.()
+    }
+  }
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-4 px-1">
+        <button onClick={() => onShowAll?.()} className="flex items-center gap-2 group/title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round">
+            <rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/>
+            <rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <h2 className="text-white text-xl font-semibold tracking-wide group-hover/title:text-purple-400 transition-colors">Browse by Genre</h2>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            className="text-gray-500 group-hover/title:text-purple-400 transition-colors">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="relative group/row">
+        {/* Left arrow */}
+        <button
+          onClick={() => scroll(-1)}
+          className="absolute left-0 top-0 bottom-0 z-10 w-10 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-start pl-1"
+          style={{ background: 'transparent' }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        {/* Cards */}
+        <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+          {loading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex-shrink-0 rounded-xl animate-pulse"
+                  style={{ width: '140px', aspectRatio: '2/3', background: 'var(--skeleton)' }} />
+              ))
+            : genres.map(({ genre, posterUrl }) => (
+                <GenreCard key={genre.id} genre={genre} posterUrl={posterUrl} onClick={() => onGenreClick(genre)} />
+              ))
+          }
+        </div>
+
+        {/* Right arrow */}
+        <button
+          onClick={handleRightClick}
+          className="absolute right-0 top-0 bottom-0 z-10 w-10 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-end pr-1"
+          style={{ background: 'transparent' }}
+          title={rightClicks > 0 ? 'See all genres' : 'Scroll right'}
+        >
+          {rightClicks > 0 ? (
+            <div className="flex flex-col items-center gap-0.5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2.5">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              <span className="text-[9px] font-bold" style={{ color: '#9333ea' }}>ALL</span>
+            </div>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -18,6 +134,7 @@ export default function HomePage() {
   const [activePage, setActivePage] = useState('home')
 
   const showAll = (title, movies) => navigate('/browse', { state: { title, movies } })
+  const showGenre = (genre) => navigate(`/browse?genre_id=${genre.id}&genre_name=${encodeURIComponent(genre.name)}`)
 
   const [recommended, setRecommended] = useState([])
   const [topRated, setTopRated] = useState([])
@@ -31,6 +148,9 @@ export default function HomePage() {
   const [loadingTrend, setLoadingTrend] = useState(true)
   const [loadingNew, setLoadingNew] = useState(true)
   const [loadingBecause, setLoadingBecause] = useState(false)
+
+  const [genreCards, setGenreCards] = useState([])
+  const [loadingGenres, setLoadingGenres] = useState(true)
 
   // Fetch personalised rows (called on mount + whenever tab becomes visible again)
   const fetchPersonalised = useCallback(() => {
@@ -54,6 +174,14 @@ export default function HomePage() {
       .catch(() => { setBecauseMovie(null); setBecauseMovies([]) })
       .finally(() => setLoadingBecause(false))
   }, [user])
+
+  // Genre cards — load once
+  useEffect(() => {
+    fetchGenreCards(27)
+      .then(setGenreCards)
+      .catch(() => setGenreCards([]))
+      .finally(() => setLoadingGenres(false))
+  }, [])
 
   // Public rows — only need to load once
   useEffect(() => {
@@ -120,12 +248,18 @@ export default function HomePage() {
           </div>
         </div>
 
-        <MovieRow
-          title="Recommended for You"
-          movies={recommended}
-          loading={loadingRec}
-          onShowAll={() => showAll('Recommended for You', recommended)}
-        />
+        {/* Has recs → show recommended first */}
+        {recommended.length > 0 && (
+          <MovieRow
+            title="Recommended for You"
+            movies={recommended}
+            loading={loadingRec}
+            onShowAll={() => showAll('Recommended for You', recommended)}
+          />
+        )}
+
+        {/* Genre row — below recommended (or at top if no recs) */}
+        <GenreRow genres={genreCards} loading={loadingGenres} onGenreClick={showGenre} onShowAll={() => navigate('/genres')} />
 
         <MovieRow
           title="Top Rated"
@@ -159,6 +293,8 @@ export default function HomePage() {
             onShowAll={() => showAll(`Because You Enjoyed "${becauseMovie.movie_title}"`, becauseMovies)}
           />
         )}
+
+
       </main>
     </div>
   )

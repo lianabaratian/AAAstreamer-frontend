@@ -58,6 +58,7 @@ body {
 
 /* ── Override Tailwind colour utilities in light mode ── */
 [data-theme="light"] .text-white   { color: var(--text-primary); }
+[data-theme="light"] .text-white.genre-label { color: #ffffff; }
 [data-theme="light"] .text-gray-400 { color: var(--text-secondary); }
 [data-theme="light"] .text-gray-500 { color: var(--text-muted); }
 [data-theme="light"] .text-gray-600 { color: var(--text-muted); }

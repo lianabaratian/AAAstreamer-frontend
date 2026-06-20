@@ -244,6 +244,7 @@ export default function Sidebar({ activePage, onNavigate }) {
             <SubItem label="Trending" path="/browse?category=trending" page="browse" />
             <SubItem label="New Arrivals" path="/browse?category=new-arrivals" page="browse" />
             <SubItem label="Because You Enjoyed" path="/browse?category=because-you-enjoyed" page="browse" />
+            <SubItem label="Genres" path="/genres" page="genres" />
 
             <div className="my-3 mx-1" style={{ height: '1px', background: 'var(--border-subtle)' }} />
             <p className="px-3 pb-1 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Lists</p>

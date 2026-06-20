@@ -43,6 +43,7 @@ import WatchlistPage from './pages/WatchlistPage'
 import HistoryPage from './pages/HistoryPage'
 import BrowsePage from './pages/BrowsePage'
 import SettingsPage from './pages/SettingsPage'
+import GenresPage from './pages/GenresPage'
 
 function RootRoute() {
   const { user, loading } = useAuth()
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route path="/browse" element={<ProtectedRoute><BrowsePage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/genres" element={<ProtectedRoute><GenresPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

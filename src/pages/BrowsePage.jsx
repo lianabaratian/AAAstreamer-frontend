@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
+import api from '../api/client'
 import {
   getRecommendedMovies,
   getTopRatedMovies,
   getTrendingMovies,
   getNewMovies,
   getBecauseYouEnjoyed,
+  getTrendingByGenre,
 } from '../api/movies'
 
 function formatDuration(mins) {
@@ -127,14 +129,37 @@ export default function BrowsePage() {
   const location = useLocation()
   const { state, search } = location
   const navigate = useNavigate()
-  const category = new URLSearchParams(search).get('category')
+  const params = new URLSearchParams(search)
+  const category = params.get('category')
+  const genreId = params.get('genre_id')
+  const genreName = params.get('genre_name')
   const meta = category ? CATEGORY_META[category] : null
 
   const [movies, setMovies] = useState((state?.movies ?? []).filter(m => m.poster_url))
-  const [title, setTitle] = useState(state?.title ?? meta?.title ?? 'Movies')
+  const [title, setTitle] = useState(
+    genreName ? genreName : (state?.title ?? meta?.title ?? 'Movies')
+  )
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // Genre browsing
+    if (genreId) {
+      setTitle(genreName ?? 'Genre')
+      setLoading(true)
+      getTrendingByGenre(Number(genreId), 40)
+        .then(async (trending) => {
+          const results = await Promise.allSettled(
+            trending.map(t => api.get(`/movies/${t.id}`).then(r => r.data))
+          )
+          const full = results
+            .filter(r => r.status === 'fulfilled' && r.value.poster_url)
+            .map(r => r.value)
+          setMovies(full)
+        })
+        .catch(() => setMovies([]))
+        .finally(() => setLoading(false))
+      return
+    }
     if (!meta) return
     setTitle(meta.title)
     setLoading(true)
@@ -142,7 +167,7 @@ export default function BrowsePage() {
       .then(data => setMovies((data ?? []).filter(m => m.poster_url)))
       .catch(() => setMovies([]))
       .finally(() => setLoading(false))
-  }, [category])
+  }, [category, genreId])
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg-page)' }}>

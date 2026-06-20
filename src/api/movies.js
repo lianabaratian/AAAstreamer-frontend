@@ -62,3 +62,36 @@ export const searchMovies = (query, limit = 40) =>
 // so bad ratings never appear as a "Because You Enjoyed" source.
 export const getBecauseYouEnjoyed = (limit = 20) =>
   api.get('/me/recommendations/because-you-enjoyed', { params: { limit } }).then(r => r.data)
+
+export const getTrendingByGenre = (genreId, limit = 20) =>
+  api.get('/stats/movies/trending', { params: { genre_id: genreId, limit, min_recent: 1 } }).then(r => r.data)
+
+export const getGenres = () =>
+  api.get('/genres', { params: { limit: 50 } }).then(r => r.data)
+
+export const fetchGenreCards = async (maxGenres = 14) => {
+  const genres = await getGenres()
+  const usedMovieIds = new Set()
+  const results = []
+
+  for (const genre of genres.slice(0, maxGenres)) {
+    try {
+      const trending = await getTrendingByGenre(genre.id, 20)
+      let picked = null
+      for (const t of trending) {
+        if (usedMovieIds.has(t.id)) continue
+        const movie = await api.get(`/movies/${t.id}`).then(r => r.data)
+        if (movie.poster_url) {
+          usedMovieIds.add(t.id)
+          picked = { genre, posterUrl: movie.poster_url }
+          break
+        }
+      }
+      if (picked) results.push(picked)
+    } catch {
+      // skip failed genres
+    }
+  }
+
+  return results
+}

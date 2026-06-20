@@ -620,6 +620,7 @@ function WriteReviewModal({ movieId, onClose, onSubmitted }) {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
@@ -632,10 +633,11 @@ function WriteReviewModal({ movieId, onClose, onSubmitted }) {
         review_title: title || null,
         review_body: body || null,
       })
-      onSubmitted()
+      setSubmitting(false)
+      setSuccess(true)
+      setTimeout(() => onSubmitted(), 2200)
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to submit review')
-    } finally {
       setSubmitting(false)
     }
   }
@@ -645,7 +647,7 @@ function WriteReviewModal({ movieId, onClose, onSubmitted }) {
   const ratingLabels = { 1:'Awful', 2:'Bad', 3:'Meh', 4:'Okay', 5:'Average', 6:'Good', 7:'Very Good', 8:'Great', 9:'Excellent', 10:'Perfect' }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={!submitting && !success ? onClose : undefined}>
       <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
       <div
         className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
@@ -654,6 +656,40 @@ function WriteReviewModal({ movieId, onClose, onSubmitted }) {
       >
         {/* Purple top accent */}
         <div className="h-1 bg-gradient-to-r from-purple-600 to-indigo-500" />
+
+        {/* Submitting overlay */}
+        {submitting && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-2xl"
+            style={{ background: 'var(--bg-surface)' }}>
+            <div className="w-14 h-14 rounded-full border-4 border-purple-500/30 border-t-purple-500 animate-spin" />
+            <p className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Submitting your review…</p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Just a moment, we're saving your thoughts</p>
+          </div>
+        )}
+
+        {/* Success screen */}
+        {success && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-2xl px-8 text-center"
+            style={{ background: 'var(--bg-surface)' }}>
+            <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center"
+              style={{ boxShadow: '0 0 0 8px rgba(34,197,94,0.08)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-bold text-xl mb-1" style={{ color: 'var(--text-primary)' }}>Thank you!</p>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Your review has been submitted.<br />We appreciate you sharing your opinion!
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        )}
 
         <div className="px-6 py-5">
           <div className="flex items-center justify-between mb-5">
